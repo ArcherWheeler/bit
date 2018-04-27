@@ -34,15 +34,15 @@ func main() {
 		},
 		{
 			Name:    "switch",
-			Aliases: []string{"s"},
+			Aliases: []string{"sw"},
 			Usage:   "Move to a different branch",
 			Action:  switchTo,
 		},
 		{
-			Name:    "save",
-			Aliases: []string{"sv"},
-			Usage:   "Save your current changes",
-			Action:  save,
+			Name:    "publish",
+			Aliases: []string{"pb"},
+			Usage:   "Push your local changes to the remote repository",
+			Action:  publish,
 		},
 		{
 			Name:    "status",
@@ -123,13 +123,24 @@ func switchTo(c *cli.Context) {
 
 	git("checkout", branchName)
 
+	if branchName == "master" {
+		git("pull")
+	}
+
 	if lastCommitMessage() == "WIP-BIT-SAVE" {
 		undo(c)
 	}
 }
 
-func save(c *cli.Context) {
-	stashOnHEAD(c)
+func publish(c *cli.Context) {
+	if currentChanges() {
+		fail("Must commit changes first")
+	}
+
+	if onMaster() {
+		fail("Do not manually publish master")
+	}
+
 	git("push")
 }
 
