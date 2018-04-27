@@ -9,9 +9,8 @@ import (
 func NewBranch(c *cli.Context) {
 	branchName := c.Args().First()
 
-	changes := currentChanges()
-	if changes {
-		stashOnHEAD(c)
+	if currentChanges() {
+		smartStash()
 	}
 
 	git("checkout", "master")
@@ -60,7 +59,7 @@ func SwitchTo(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
-		stashOnHEAD(c)
+		smartStash()
 	}
 
 	git("checkout", branchName)
@@ -69,9 +68,7 @@ func SwitchTo(c *cli.Context) {
 		git("pull")
 	}
 
-	if lastCommitMessage() == "WIP-BIT-SAVE" {
-		Undo(c)
-	}
+	smartUnstash()
 }
 
 func Publish(c *cli.Context) {

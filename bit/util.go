@@ -5,29 +5,16 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
-
-	"github.com/urfave/cli"
 )
 
-func stashOnHEAD(c *cli.Context) {
-	if onMaster() {
-		Fail("Do not modify master")
-	}
-
-	if currentChanges() {
-		if lastCommitMessage() == "WIP-BIT-SAVE" {
-			Undo(c)
-		}
-
-		git("add", "-A")
-		git("commit", "-m", "WIP-BIT-SAVE")
-	}
+func smartStash() {
+	stashSave := fmt.Sprintf("WIP-BIT-STASH-%s", currentBranch())
+	git("stash", "save", "--include-untracked", stashSave)
 }
 
-func lastCommitMessage() string {
-	lastCommit := git("log", "-1", "--pretty=%B")
-	return strings.TrimSpace(lastCommit)
+func smartUnstash() {
+	stashSave := fmt.Sprintf("stash^{/WIP-BIT-STASH-%s}", currentBranch())
+	git("stash", "pop", stashSave)
 }
 
 func currentChanges() bool {
@@ -35,9 +22,12 @@ func currentChanges() bool {
 	return state != ""
 }
 
+func currentBranch() string {
+	return git("rev-parse", "--abbrev-ref", "HEAD")
+}
+
 func onMaster() bool {
-	branch := git("rev-parse", "--abbrev-ref", "HEAD")
-	return branch == "master"
+	return currentBranch() == "master"
 }
 
 func git(args ...string) string {
