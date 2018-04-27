@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,7 +30,7 @@ func main() {
 			Name:    "undo",
 			Aliases: []string{"u"},
 			Usage:   "Undo the last commit",
-			Action:  rollBack,
+			Action:  undo,
 		},
 		{
 			Name:    "switch",
@@ -42,7 +41,7 @@ func main() {
 		{
 			Name:    "save",
 			Aliases: []string{"sv"},
-			Usage:   "Save your current changes and push them to github",
+			Usage:   "Save your current changes",
 			Action:  save,
 		},
 		{
@@ -51,11 +50,17 @@ func main() {
 			Usage:   "Your current status",
 			Action:  status,
 		},
+		{
+			Name:    "sync",
+			Aliases: []string{"sy"},
+			Usage:   "Update and merge with remote changes",
+			Action:  sync,
+		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fail(err)
 	}
 }
 
@@ -64,7 +69,7 @@ func newBranch(c *cli.Context) {
 
 	changes := currentChanges()
 	if changes {
-		save(c)
+		stashOnHEAD(c)
 	}
 
 	git("checkout", "master")
@@ -73,21 +78,36 @@ func newBranch(c *cli.Context) {
 	git("push", "--set-upstream", "origin", branchName)
 }
 
+func sync(c *cli.Context) {
+	if currentChanges() {
+		fail("Must commit changes first")
+	}
+
+	git("fetch")
+
+	if onMaster() {
+		return
+	}
+
+	stdout := git("merge", "master")
+	fmt.Print(stdout)
+}
+
 func commit(c *cli.Context) {
 	message := c.Args().First()
 
 	if onMaster() {
-		log.Fatal("Do not commit to master")
+		fail("Do not commit to master")
 	}
 
 	git("add", "-A")
 	git("commit", "-m", message)
 }
 
-func rollBack(c *cli.Context) {
+func undo(c *cli.Context) {
 	numCommits := git("rev-list", "--count", "master..HEAD")
 	if numCommits == "0" {
-		log.Fatal("No commits since master to undo")
+		fail("No commits since master to undo")
 	}
 
 	git("reset", "--soft", "HEAD^")
@@ -98,30 +118,34 @@ func switchTo(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
-		save(c)
+		stashOnHEAD(c)
 	}
 
 	git("checkout", branchName)
 
 	if lastCommitMessage() == "WIP-BIT-SAVE" {
-		rollBack(c)
+		undo(c)
 	}
 }
 
 func save(c *cli.Context) {
+	stashOnHEAD(c)
+	git("push")
+}
+
+func stashOnHEAD(c *cli.Context) {
 	if onMaster() {
-		log.Fatal("Do not modify master")
+		fail("Do not modify master")
 	}
 
 	if currentChanges() {
 		if lastCommitMessage() == "WIP-BIT-SAVE" {
-			rollBack(c)
+			undo(c)
 		}
 
 		git("add", "-A")
 		git("commit", "-m", "WIP-BIT-SAVE")
 	}
-	git("push")
 }
 
 func status(c *cli.Context) {
@@ -130,7 +154,7 @@ func status(c *cli.Context) {
 }
 
 func lastCommitMessage() string {
-	lastCommit := git("log", "-1", "--pretty=%B", "|", "tee")
+	lastCommit := git("log", "-1", "--pretty=%B")
 	return strings.TrimSpace(lastCommit)
 }
 
@@ -145,13 +169,23 @@ func onMaster() bool {
 }
 
 func git(args ...string) string {
-	buf := new(bytes.Buffer)
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
 	cmd := exec.Command("git", args...)
-	cmd.Stdout = buf
+	cmd.Stdout = outBuf
+	cmd.Stderr = errBuf
 
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		if errBuf.String() != "" {
+			fail(errBuf.String())
+		}
+		fail(outBuf.String())
 	}
-	return buf.String()
+	return outBuf.String()
+}
+
+func fail(msg interface{}) {
+	fmt.Print(msg)
+	os.Exit(1)
 }
