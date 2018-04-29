@@ -4,9 +4,11 @@ A simple and safe way to learn git. The primary goal of this project is make a t
 
 # Development
 
-Set up Golang and Glide (https://github.com/Masterminds/glide). Remember to clone the repo under `$GOPATH/src/github.com/ArcherWheeler/bit/`.
+Set up Golang and Glide (https://github.com/Masterminds/glide).
 
 ```shell
+go get github.com/ArcherWheeler/bit
+cd $GOPATH/src/github.com/ArcherWheeler/bit
 glide install
 export PATH=$PATH:$GOPATH/bin
 go install
