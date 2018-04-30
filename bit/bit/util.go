@@ -23,7 +23,7 @@ func currentChanges() bool {
 }
 
 func currentBranch() string {
-	return git("rev-parse", "--abbrev-ref", "HEAD")
+	return git("symbolic-ref", "--short", "HEAD")
 }
 
 func onMaster() bool {

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/ArcherWheeler/bit/bit"
+	"github.com/ArcherWheeler/bit/bit/bit"
 	"github.com/urfave/cli"
 )
 
