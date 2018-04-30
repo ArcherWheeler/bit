@@ -19,22 +19,13 @@ func TestBit(t *testing.T) {
 	if failsafe != "off" {
 		t.FailNow()
 	}
-	os.Mkdir("testRepo", os.ModeDir)
-	os.Chdir("testRepo")
+
+	setUpRepos()
 
 	t.Run("Run bit help", func(t *testing.T) {
 		out, err := bit("help")
 		require.NotEqual(t, "", out)
 		require.Equal(t, "", err)
-	})
-
-	t.Run("Set up git repo", func(t *testing.T) {
-		cmd := exec.Command("git", "init")
-		err := cmd.Run()
-		require.NoError(t, err)
-
-		shell("git config --global user.name 'John Doe'")
-		shell("git config --global user.email 'john@doe.com'")
 	})
 
 	t.Run("Bit commit first file", func(t *testing.T) {
@@ -50,16 +41,76 @@ func TestBit(t *testing.T) {
 		fmt.Println(out)
 		require.Equal(t,
 			`On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
 nothing to commit, working tree clean`,
 			out)
 		require.Equal(t, "", err)
 	})
+
+	t.Run("bit feature", func(t *testing.T) {
+		out, err := bit("feature", "other-branch")
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
+
+		branch := shell("git symbolic-ref --short HEAD")
+		require.Equal(t, "other-branch", branch)
+	})
+
+	t.Run("Bit switch", func(t *testing.T) {
+		shell("echo foo >> txt")
+		st := shell("git status -s")
+		require.Equal(t, "M txt", st)
+
+		bit("switch", "master")
+		st = shell("git status -s")
+		require.Equal(t, "", st)
+
+		bit("switch", "other-branch")
+
+		st = shell("git status -s")
+		require.Equal(t, "M txt", st)
+	})
 }
 
-func shell(args ...string) {
+func setUpRepos() {
+	os.Mkdir("testRepo", os.ModeDir)
+	os.Chdir("testRepo")
+	shell("git init")
+
+	shell("git config --global user.name 'John Doe'")
+	shell("git config --global user.email 'john@doe.com'")
+
+	shell("git config receive.denyCurrentBranch ignore")
+	shell("echo foo >> txt")
+	shell("git add .")
+	shell("git commit -m \"hello world\"")
+
+	os.Chdir("..")
+	os.Mkdir("local", os.ModeDir)
+	os.Chdir("local")
+	shell("git clone ../testRepo")
+	os.Chdir("testRepo")
+}
+
+func shell(args ...string) string {
 	argz := append([]string{"-c"}, args...)
 	cmd := exec.Command("sh", argz...)
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+
+	cmd.Stdout = outBuf
+	cmd.Stderr = errBuf
 	_ = cmd.Run()
+
+	fmt.Println(args)
+	fmt.Print(outBuf.String())
+	fmt.Print(errBuf.String())
+
+	fmt.Println("")
+
+	return strings.TrimSpace(outBuf.String())
 }
 
 func bit(args ...string) (string, string) {
