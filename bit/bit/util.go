@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func smartStash() {
@@ -14,7 +15,7 @@ func smartStash() {
 
 func smartUnstash() {
 	stashSave := fmt.Sprintf("stash^{/WIP-BIT-STASH-%s}", currentBranch())
-	git("stash", "pop", stashSave)
+	git("stash", "apply", stashSave)
 }
 
 func currentChanges() bool {
@@ -44,10 +45,10 @@ func git(args ...string) string {
 		}
 		Fail(outBuf.String())
 	}
-	return outBuf.String()
+	return strings.TrimSpace(outBuf.String())
 }
 
 func Fail(msg interface{}) {
-	fmt.Print(msg)
+	fmt.Fprint(os.Stderr, msg)
 	os.Exit(1)
 }

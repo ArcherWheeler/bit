@@ -28,25 +28,23 @@ func TestBit(t *testing.T) {
 		require.Equal(t, "", err)
 	})
 
-	t.Run("Bit commit first file", func(t *testing.T) {
-		shell("echo foo >> txt")
-		out, err := bit("commit", "\"foo\"")
-
-		require.Equal(t, "", out)
-		require.Equal(t, "", err)
-	})
-
 	t.Run("bit status", func(t *testing.T) {
 		out, err := bit("status")
 		fmt.Println(out)
 		require.Equal(t,
 			`On branch master
-Your branch is ahead of 'origin/master' by 1 commit.
-  (use "git push" to publish your local commits)
+Your branch is up to date with 'origin/master'.
 
 nothing to commit, working tree clean`,
 			out)
 		require.Equal(t, "", err)
+	})
+
+	t.Run("Commit not allowed on master", func(t *testing.T) {
+		out, err := bit("commit", "\"foo\"")
+
+		require.Equal(t, "", out)
+		require.Equal(t, "Do not commit to master", err)
 	})
 
 	t.Run("bit feature", func(t *testing.T) {
@@ -56,6 +54,14 @@ nothing to commit, working tree clean`,
 
 		branch := shell("git symbolic-ref --short HEAD")
 		require.Equal(t, "other-branch", branch)
+	})
+
+	t.Run("Bit commit works on a feature branch", func(t *testing.T) {
+		shell("echo foo >> txt")
+		out, err := bit("commit", "\"foo\"")
+
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
 	})
 
 	t.Run("Bit switch", func(t *testing.T) {
