@@ -22,4 +22,4 @@ RUN go install
 WORKDIR /go/src/github.com/ArcherWheeler/bit/test
 COPY test/ .
 ENV TEST_FAILSAFE="off"
-RUN go test cli_test.go
+CMD ["go", "test", "cli_test.go"]
