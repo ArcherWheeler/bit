@@ -10,7 +10,7 @@ func NewBranch(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
-		smartStash()
+		SmartStash()
 	}
 
 	git("checkout", "master")
@@ -59,7 +59,7 @@ func SwitchTo(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
-		smartStash()
+		SmartStash()
 	}
 
 	git("checkout", branchName)
@@ -68,7 +68,7 @@ func SwitchTo(c *cli.Context) {
 		git("pull")
 	}
 
-	smartUnstash()
+	SmartUnstash()
 }
 
 func Publish(c *cli.Context) {

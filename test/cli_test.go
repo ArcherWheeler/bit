@@ -48,12 +48,12 @@ nothing to commit, working tree clean`,
 	})
 
 	t.Run("bit feature", func(t *testing.T) {
-		out, err := bit("feature", "other-branch")
+		out, err := bit("feature", "main-branch")
 		require.Equal(t, "", out)
 		require.Equal(t, "", err)
 
 		branch := shell("git symbolic-ref --short HEAD")
-		require.Equal(t, "other-branch", branch)
+		require.Equal(t, "main-branch", branch)
 	})
 
 	t.Run("Bit commit works on a feature branch", func(t *testing.T) {
@@ -73,11 +73,19 @@ nothing to commit, working tree clean`,
 		st = shell("git status -s")
 		require.Equal(t, "", st)
 
-		bit("switch", "other-branch")
+		bit("switch", "main-branch")
 
 		st = shell("git status -s")
 		require.Equal(t, "M txt", st)
+
+		out, err := bit("switch", "master")
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
+
+		st = shell("git status -s")
+		require.Equal(t, "", st)
 	})
+
 }
 
 func setUpRepos() {
@@ -125,6 +133,12 @@ func bit(args ...string) (string, string) {
 	cmd := exec.Command("bit", args...)
 	cmd.Stdout = outBuf
 	cmd.Stderr = errBuf
+
+	fmt.Print("Bit: ")
+	fmt.Println(args)
+	fmt.Print(outBuf.String())
+	fmt.Print(errBuf.String())
+	fmt.Println("")
 
 	// We want to test the top level api. We care about stdin and stdout not
 	// Go's runtime error representation
