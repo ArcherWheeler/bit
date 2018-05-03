@@ -69,7 +69,10 @@ nothing to commit, working tree clean`,
 		st := shell("git status -s")
 		require.Equal(t, "M txt", st)
 
-		bit("switch", "master")
+		out, err := bit("switch", "master")
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
+
 		st = shell("git status -s")
 		require.Equal(t, "", st)
 
@@ -78,14 +81,40 @@ nothing to commit, working tree clean`,
 		st = shell("git status -s")
 		require.Equal(t, "M txt", st)
 
-		out, err := bit("switch", "master")
+		out, err = bit("switch", "master")
 		require.Equal(t, "", out)
 		require.Equal(t, "", err)
 
 		st = shell("git status -s")
 		require.Equal(t, "", st)
+
+		bit("switch", "main-branch")
 	})
 
+	t.Run("Bit undo", func(t *testing.T) {
+		bit("commit", "\"bar\"")
+
+		st := shell("git status -s")
+		require.Equal(t, "", st)
+
+		out, err := bit("undo")
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
+
+		st = shell("git status -s")
+		require.Equal(t, "M txt", st)
+
+		bit("commit", "\"bar\"")
+	})
+
+	t.Run("Bit publish", func(t *testing.T) {
+		bit("feature", "other-branch")
+		bit("switch", "main-branch")
+
+		out, err := bit("publish")
+		require.Equal(t, "", out)
+		require.Equal(t, "", err)
+	})
 }
 
 func setUpRepos() {
