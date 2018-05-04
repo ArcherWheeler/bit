@@ -5,16 +5,25 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
-func smartStash() {
-	stashSave := fmt.Sprintf("WIP-BIT-STASH-%s", currentBranch())
-	git("stash", "save", "--include-untracked", stashSave)
+func SmartStash() {
+	if currentChanges() {
+		if onMaster() {
+			Fail("Do not commit to master")
+		}
+
+		git("add", "-A")
+		git("commit", "-m", "WIP-BIT-SMART-STASH")
+	}
 }
 
-func smartUnstash() {
-	stashSave := fmt.Sprintf("stash^{/WIP-BIT-STASH-%s}", currentBranch())
-	git("stash", "pop", stashSave)
+func SmartUnstash() {
+	lastCommit, _ := gitF("log", "-1", "--pretty=%B")
+	if lastCommit == "WIP-BIT-SMART-STASH" {
+		Undo()
+	}
 }
 
 func currentChanges() bool {
@@ -23,7 +32,7 @@ func currentChanges() bool {
 }
 
 func currentBranch() string {
-	return git("rev-parse", "--abbrev-ref", "HEAD")
+	return git("symbolic-ref", "--short", "HEAD")
 }
 
 func onMaster() bool {
@@ -31,6 +40,11 @@ func onMaster() bool {
 }
 
 func git(args ...string) string {
+	out, _ := gitF(args...)
+	return out
+}
+
+func gitF(args ...string) (string, error) {
 	outBuf := new(bytes.Buffer)
 	errBuf := new(bytes.Buffer)
 	cmd := exec.Command("git", args...)
@@ -44,10 +58,10 @@ func git(args ...string) string {
 		}
 		Fail(outBuf.String())
 	}
-	return outBuf.String()
+	return strings.TrimSpace(outBuf.String()), err
 }
 
 func Fail(msg interface{}) {
-	fmt.Print(msg)
+	fmt.Fprint(os.Stderr, msg)
 	os.Exit(1)
 }

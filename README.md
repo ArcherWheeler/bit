@@ -8,7 +8,7 @@ Set up Golang and Glide (https://github.com/Masterminds/glide).
 
 ```shell
 go get github.com/ArcherWheeler/bit
-cd $GOPATH/src/github.com/ArcherWheeler/bit
+cd $GOPATH/src/github.com/ArcherWheeler/bit/src
 glide install
 export PATH=$PATH:$GOPATH/bin
 go install

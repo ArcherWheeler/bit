@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/ArcherWheeler/bit/bit"
+	"github.com/ArcherWheeler/bit/bit/bit"
 	"github.com/urfave/cli"
 )
 
@@ -27,7 +27,7 @@ func main() {
 			Name:    "undo",
 			Aliases: []string{"u"},
 			Usage:   "Undo the last commit",
-			Action:  bit.Undo,
+			Action:  func(c *cli.Context) { bit.Undo() },
 		},
 		{
 			Name:    "switch",

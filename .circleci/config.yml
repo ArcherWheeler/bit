@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang
+
+    working_directory: /go/src/github.com/ArcherWheeler/bit
+    steps:
+      - checkout
+      - setup_remote_docker:
+          reusable: true
+
+      - run:
+          name: Build test docker container
+          command: |
+            docker build -t tests .
+
+      - run:
+          name: Run tests
+          command: |
+            docker run tests
