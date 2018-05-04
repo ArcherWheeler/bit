@@ -27,7 +27,7 @@ func main() {
 			Name:    "undo",
 			Aliases: []string{"u"},
 			Usage:   "Undo the last commit",
-			Action:  bit.Undo,
+			Action:  func(c *cli.Context) { bit.Undo() },
 		},
 		{
 			Name:    "switch",

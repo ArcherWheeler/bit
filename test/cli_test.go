@@ -110,10 +110,30 @@ nothing to commit, working tree clean`,
 	t.Run("Bit publish", func(t *testing.T) {
 		bit("feature", "other-branch")
 		bit("switch", "main-branch")
+		shell("git status")
 
 		out, err := bit("publish")
 		require.Equal(t, "", out)
 		require.Equal(t, "", err)
+	})
+
+	t.Run("Bit sync", func(t *testing.T) {
+		shell("git checkout master")
+		shell("git merge main-branch")
+		shell("git push")
+
+		bit("switch", "other-branch")
+
+		numCommitsBranch := shell("git rev-list --count other-branch")
+		numCommitsMaster := shell("git rev-list --count origin/master")
+
+		require.NotEqual(t, numCommitsMaster, numCommitsBranch)
+		_, err := bit("sync")
+		require.Equal(t, "", err)
+
+		numCommitsBranch = shell("git rev-list --count other-branch")
+		numCommitsMaster = shell("git rev-list --count origin/master")
+		require.Equal(t, numCommitsMaster, numCommitsBranch)
 	})
 }
 
