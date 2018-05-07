@@ -19,10 +19,10 @@ func SmartStash() {
 	}
 }
 
-func SmartUnstash() {
+func (t *Tutor) SmartUnstash() {
 	lastCommit, _ := gitF("log", "-1", "--pretty=%B")
 	if lastCommit == "WIP-BIT-SMART-STASH" {
-		Undo()
+		t.Undo()
 	}
 }
 

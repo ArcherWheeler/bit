@@ -1,77 +1,75 @@
 package bit
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli"
 )
 
-func NewBranch(c *cli.Context) {
+func (t *Tutor) NewBranch(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
 		SmartStash()
 	}
 
-	git("checkout", "master")
-	git("pull")
-	git("checkout", "-b", branchName)
-	git("push", "--set-upstream", "origin", branchName)
+	t.git("checkout", "master")
+	t.git("pull")
+	t.git("checkout", "-b", branchName)
+	t.git("push", "--set-upstream", "origin", branchName)
 }
 
-func Sync(c *cli.Context) {
+func (t *Tutor) Sync(c *cli.Context) {
 	if currentChanges() {
 		Fail("Must commit changes first")
 	}
 
-	git("fetch")
+	t.git("fetch")
 
 	if onMaster() {
 		return
 	}
 
-	stdout := git("merge", "master")
-	fmt.Print(stdout)
+	stdout := t.git("merge", "master")
+	t.finalOutput(stdout)
 }
 
-func Commit(c *cli.Context) {
+func (t *Tutor) Commit(c *cli.Context) {
 	message := c.Args().First()
 
 	if onMaster() {
 		Fail("Do not commit to master")
 	}
 
-	git("add", "-A")
-	git("commit", "-m", message)
+	t.git("add", "-A")
+	t.git("commit", "-m", message)
 }
 
-func Undo() {
-	numCommits := git("rev-list", "--count", "master..HEAD")
+func (t *Tutor) Undo() {
+	numCommits := t.git("rev-list", "--count", "master..HEAD")
 	if numCommits == "0" {
 		Fail("No commits since master to undo")
 	}
 
-	git("reset", "--soft", "HEAD^")
-	git("reset", "HEAD", ".")
+	t.git("reset", "--soft", "HEAD^")
+	t.git("reset", "HEAD", ".")
 }
 
-func SwitchTo(c *cli.Context) {
+func (t *Tutor) SwitchTo(c *cli.Context) {
 	branchName := c.Args().First()
 
 	if currentChanges() {
 		SmartStash()
 	}
 
-	git("checkout", branchName)
+	t.git("checkout", branchName)
 
 	if branchName == "master" {
-		git("pull")
+		t.git("pull")
 	}
 
-	SmartUnstash()
+	t.SmartUnstash()
 }
 
-func Publish(c *cli.Context) {
+func (t *Tutor) Publish(c *cli.Context) {
 	if currentChanges() {
 		Fail("Must commit changes first")
 	}
@@ -80,10 +78,10 @@ func Publish(c *cli.Context) {
 		Fail("Do not manually publish master")
 	}
 
-	git("push")
+	t.git("push")
 }
 
-func Status(c *cli.Context) {
-	stdout := git("status")
-	fmt.Print(stdout)
+func (t *Tutor) Status(c *cli.Context) {
+	stdout := t.git("status")
+	t.finalOutput(stdout)
 }
