@@ -66,6 +66,13 @@ func readFromConfig() (*BitConfig, error) {
 	return &config, nil
 }
 
+func (t *Tutor) explain(explanation string) *Tutor {
+	if t.ShowMode {
+		fmt.Println(explanation)
+	}
+	return t
+}
+
 func (t *Tutor) finalOutput(output string) {
 	if !t.ShowMode {
 		fmt.Println(output)
