@@ -35,6 +35,19 @@ func NewTutor() (*Tutor, error) {
 	}, nil
 }
 
+func saveConfig(config BitConfig) error {
+	homeDir := os.Getenv("HOME")
+	bitConfigPath := path.Join(homeDir, ".config", "bit")
+	file, err := os.Create(bitConfigPath)
+	if err != nil {
+		return errors.Wrap(err, "Failed to open $HOME/.config/bit")
+	}
+	defer file.Close()
+
+	err = json.NewEncoder(file).Encode(&config)
+	return errors.Wrap(err, "Failed to write to $HOME/.config/bit")
+}
+
 func readFromConfig() (*BitConfig, error) {
 	homeDir := os.Getenv("HOME")
 	bitConfigPath := path.Join(homeDir, ".config", "bit")
@@ -48,8 +61,8 @@ func readFromConfig() (*BitConfig, error) {
 		defer file.Close()
 
 		config := BitConfig{}
-		json.NewEncoder(file).Encode(&config)
-		return &config, nil
+		err = json.NewEncoder(file).Encode(&config)
+		return &config, err
 	}
 
 	file, err := os.Open(bitConfigPath)
@@ -79,6 +92,10 @@ func (t *Tutor) finalOutput(output string) {
 	}
 }
 
+func (t *Tutor) hide() *Tutor {
+	return &Tutor{ShowMode: false}
+}
+
 func (t *Tutor) git(args ...string) string {
 	out, _ := t.gitF(args...)
 	return out
@@ -87,7 +104,6 @@ func (t *Tutor) git(args ...string) string {
 func (t *Tutor) gitF(args ...string) (string, error) {
 	if t.ShowMode {
 		color.Magenta("git " + strings.Join(args, " "))
-		fmt.Println()
 		t.Reader.ReadString('\n')
 	}
 

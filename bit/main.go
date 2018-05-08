@@ -26,7 +26,7 @@ func main() {
 			Name:    "commit",
 			Aliases: []string{"c"},
 			Usage:   "Commit all changes to the branch",
-			Action:  t.Commit,
+			Action:  t.CommitCmd,
 		},
 		{
 			Name:    "undo",
@@ -57,6 +57,12 @@ func main() {
 			Aliases: []string{"sy"},
 			Usage:   "Update and merge with remote changes",
 			Action:  t.Sync,
+		},
+		{
+			Name:    "toggle",
+			Aliases: []string{"tg"},
+			Usage:   "Toggle the show mode on/off",
+			Action:  t.ToggleShowMode,
 		},
 	}
 

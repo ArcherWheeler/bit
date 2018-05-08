@@ -7,8 +7,8 @@ import (
 func (t *Tutor) NewBranch(c *cli.Context) {
 	branchName := c.Args().First()
 
-	if currentChanges() {
-		SmartStash()
+	if t.currentChanges() {
+		t.SmartStash()
 	}
 
 	t.explain(
@@ -32,24 +32,43 @@ Bit automatically does this now for simplicity and to avoid confusion.`,
 }
 
 func (t *Tutor) Sync(c *cli.Context) {
-	if currentChanges() {
-		Fail("Must commit changes first")
+	if t.currentChanges() {
+		Fail("For sync to work, you must commit your changes first")
 	}
+	branch := t.hide().currentBranch()
 
-	t.git("fetch")
-
-	if onMaster() {
+	if t.onMaster() {
 		return
 	}
+	t.explain(
+		"We want to update our current feature branch with any new changes commited to master.\n\n"+
+			"First we switch to the master branch.",
+	).git("checkout", "master")
 
-	stdout := t.git("merge", "master")
+	t.explain(
+		"We now update our local copy of master with any changes commited to the remote version",
+	).git("pull")
+
+	t.explain(
+		"Now that we've updated master, we switch back to our feature branch.",
+	).git("checkout", branch)
+
+	stdout :=
+		t.explain(
+			"Now we merge the new changes to master into our current feature branch.\n\n"+
+				"Now our feature branch will have all of the changes done to master, as well as the edits you are currently"+
+				"working on.\n\n"+
+				"We don't want to merge "+branch+" into master, until we are entirely done with the new feature.",
+		).git("merge", "master")
+
 	t.finalOutput(stdout)
 }
 
-func (t *Tutor) Commit(c *cli.Context) {
-	message := c.Args().First()
-
-	if onMaster() {
+func (t *Tutor) CommitCmd(c *cli.Context) {
+	t.commit(c.Args().First())
+}
+func (t *Tutor) commit(message string) {
+	if t.onMaster() {
 		Fail("Do not commit to master")
 	}
 
@@ -70,11 +89,12 @@ func (t *Tutor) Commit(c *cli.Context) {
 }
 
 func (t *Tutor) Undo() {
-	numCommits := t.git("rev-list", "--count", "master..HEAD")
+	numCommits := t.hide().git("rev-list", "--count", "master..HEAD")
 	if numCommits == "0" {
-		Fail("No commits since master to undo")
+		Fail("No commits since this branch was made to undo")
 	}
 
+	t.explain("Git doesn't have a clean way to undo the last commit. Don't worry too much about how this works.")
 	t.git("reset", "--soft", "HEAD^")
 	t.git("reset", "HEAD", ".")
 }
@@ -82,32 +102,53 @@ func (t *Tutor) Undo() {
 func (t *Tutor) SwitchTo(c *cli.Context) {
 	branchName := c.Args().First()
 
-	if currentChanges() {
-		SmartStash()
+	if t.currentChanges() {
+		t.SmartStash()
+	} else {
+		t.explain("Bit can tell you have no changes since your last commit, so you don't need to save anything extra")
 	}
 
-	t.git("checkout", branchName)
+	t.explain(
+		"We need to tell git the branch we want to switch to",
+	).git("checkout", branchName)
 
 	if branchName == "master" {
-		t.git("pull")
+		t.explain(
+			"Bit won't let you modify the master branch, so if you want to look at it, it should match the most up to date" +
+				"version from the remote repository",
+		).git("pull")
 	}
 
-	t.SmartUnstash()
+	t.explain(
+		"Bit now checks wether any unfished changes were saved on this branch in a \"Work In Progress\" (WIP) commit.",
+	).SmartUnstash()
 }
 
 func (t *Tutor) Publish(c *cli.Context) {
-	if currentChanges() {
-		Fail("Must commit changes first")
+	if t.currentChanges() {
+		Fail("You must commit your changes first")
 	}
 
-	if onMaster() {
-		Fail("Do not manually publish master")
+	if t.onMaster() {
+		Fail("Do not manually edit and publish the master branch")
 	}
 
-	t.git("push")
+	t.explain(
+		"In Git, there is both a local copy of your branch and a remote copy stored in a place like Github.com.",
+	).git("push")
 }
 
 func (t *Tutor) Status(c *cli.Context) {
-	stdout := t.git("status")
+	stdout :=
+		t.explain(
+			"This one is no different than the Git command.",
+		).git("status")
 	t.finalOutput(stdout)
+}
+
+func (t *Tutor) ToggleShowMode(c *cli.Context) {
+	err := saveConfig(BitConfig{ShowMode: !t.ShowMode})
+	if err != nil {
+		Fail(err)
+	}
 }
