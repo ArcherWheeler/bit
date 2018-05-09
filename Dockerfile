@@ -22,4 +22,6 @@ RUN go install
 WORKDIR /go/src/github.com/ArcherWheeler/bit/test
 COPY test/ .
 ENV TEST_FAILSAFE="off"
+RUN mkdir -p /Users/johndoe/.config
+ENV HOME="/Users/johndoe/"
 CMD ["go", "test", "cli_test.go"]

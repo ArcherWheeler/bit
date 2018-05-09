@@ -44,7 +44,7 @@ nothing to commit, working tree clean`,
 		out, err := bit("commit", "\"foo\"")
 
 		require.Equal(t, "", out)
-		require.Equal(t, "Do not commit to master", err)
+		require.NotEqual(t, "", err)
 	})
 
 	t.Run("bit feature", func(t *testing.T) {

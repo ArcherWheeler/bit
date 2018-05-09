@@ -10,52 +10,63 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "The best way to learn git (TM)"
+	t, err := bit.NewTutor()
+	if err != nil {
+		bit.Fail(err)
+	}
+
 	app.Commands = []cli.Command{
 		{
 			Name:    "feature",
 			Aliases: []string{"f"},
 			Usage:   "Create a new feature branch",
-			Action:  bit.NewBranch,
+			Action:  t.NewBranch,
 		},
 		{
 			Name:    "commit",
 			Aliases: []string{"c"},
 			Usage:   "Commit all changes to the branch",
-			Action:  bit.Commit,
+			Action:  t.CommitCmd,
 		},
 		{
 			Name:    "undo",
 			Aliases: []string{"u"},
 			Usage:   "Undo the last commit",
-			Action:  func(c *cli.Context) { bit.Undo() },
+			Action:  func(c *cli.Context) { t.Undo() },
 		},
 		{
 			Name:    "switch",
 			Aliases: []string{"sw"},
 			Usage:   "Move to a different branch",
-			Action:  bit.SwitchTo,
+			Action:  t.SwitchTo,
 		},
 		{
 			Name:    "publish",
 			Aliases: []string{"pb"},
 			Usage:   "Push your local changes to the remote repository",
-			Action:  bit.Publish,
+			Action:  t.Publish,
 		},
 		{
 			Name:    "status",
 			Aliases: []string{"st"},
 			Usage:   "Your current status",
-			Action:  bit.Status,
+			Action:  t.Status,
 		},
 		{
 			Name:    "sync",
 			Aliases: []string{"sy"},
 			Usage:   "Update and merge with remote changes",
-			Action:  bit.Sync,
+			Action:  t.Sync,
+		},
+		{
+			Name:    "toggle",
+			Aliases: []string{"tg"},
+			Usage:   "Toggle the show mode on/off",
+			Action:  t.ToggleShowMode,
 		},
 	}
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		bit.Fail(err)
 	}
