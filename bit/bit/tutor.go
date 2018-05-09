@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/dollarshaveclub/line"
 	"github.com/pkg/errors"
 
 	"github.com/fatih/color"
@@ -79,9 +80,10 @@ func readFromConfig() (*BitConfig, error) {
 	return &config, nil
 }
 
-func (t *Tutor) explain(explanation string) *Tutor {
+func (t *Tutor) explain(explanations ...string) *Tutor {
 	if t.ShowMode {
-		fmt.Println(explanation)
+		output := line.New(os.Stdout, "", "", line.WhiteColor)
+		output.Println(strings.Join(explanations, "\n\n"))
 	}
 	return t
 }
@@ -103,7 +105,10 @@ func (t *Tutor) git(args ...string) string {
 
 func (t *Tutor) gitF(args ...string) (string, error) {
 	if t.ShowMode {
-		color.Magenta("git " + strings.Join(args, " "))
+		boldgreen := color.New(color.Bold, color.FgBlue)
+		output := line.New(os.Stdout, "", "", line.WhiteColor)
+		output.Println()
+		output.Print("> ").Format(boldgreen).Print("git ").Cyan().Print(strings.Join(args, " "))
 		t.Reader.ReadString('\n')
 	}
 
@@ -122,10 +127,41 @@ func (t *Tutor) gitF(args ...string) (string, error) {
 	}
 
 	if t.ShowMode {
-		color.Green(outBuf.String())
+
 		fmt.Println()
-		fmt.Println("--------------")
+		fmt.Println("========== Output ==========")
+		output := outBuf.String()
+		if strings.TrimSpace(output) == "" {
+			output = "Nothing!"
+		}
+		fmt.Print(outBuf)
+		fmt.Println("============================")
+		fmt.Println()
+
 	}
 
 	return strings.TrimSpace(outBuf.String()), err
+}
+
+func p(text string) string {
+	return word_wrap(text, 80)
+}
+
+func word_wrap(text string, lineWidth int) string {
+	words := strings.Fields(strings.TrimSpace(text))
+	if len(words) == 0 {
+		return text
+	}
+	wrapped := words[0]
+	spaceLeft := lineWidth - len(wrapped)
+	for _, word := range words[1:] {
+		if len(word)+1 > spaceLeft {
+			wrapped += "\n" + word
+			spaceLeft = lineWidth - len(word)
+		} else {
+			wrapped += " " + word
+			spaceLeft -= 1 + len(word)
+		}
+	}
+	return wrapped
 }

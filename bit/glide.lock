@@ -1,6 +1,8 @@
-hash: 1f8d9ac8b986d2a4a815de7a67e945062180a03d6cd5ea531b0c8ef05fd3870f
-updated: 2018-05-07T17:30:46.601154-04:00
+hash: 9734d5dc149d1238af55ca5300c0e1ab82766869a2eb4f9ce96857e38ad16c65
+updated: 2018-05-09T12:10:04.112791-04:00
 imports:
+- name: github.com/dollarshaveclub/line
+  version: fc7a351a8b58b63954c6651077ab65c49eae5c22
 - name: github.com/fatih/color
   version: 507f6050b8568533fb3f5504de8e5205fa62a114
 - name: github.com/mattn/go-colorable
