@@ -114,7 +114,7 @@ func (t *Tutor) gitF(args ...string) (string, error) {
 
 	outBuf := new(bytes.Buffer)
 	errBuf := new(bytes.Buffer)
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", append([]string{"-c", "color.ui=always"}, args...)...)
 	cmd.Stdout = outBuf
 	cmd.Stderr = errBuf
 
@@ -134,7 +134,7 @@ func (t *Tutor) gitF(args ...string) (string, error) {
 		if strings.TrimSpace(output) == "" {
 			output = "Nothing!"
 		}
-		fmt.Print(outBuf)
+		fmt.Print(output)
 		fmt.Println("============================")
 		fmt.Println()
 
