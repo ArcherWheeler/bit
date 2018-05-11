@@ -17,12 +17,20 @@ import (
 )
 
 type BitConfig struct {
-	ShowMode bool
+	BitMode BitMode
 }
 
+type BitMode int
+
+const (
+	SilentMode  BitMode = 0
+	ExplainMode BitMode = 1
+	HintMode    BitMode = 2
+)
+
 type Tutor struct {
-	ShowMode bool
-	Reader   *bufio.Reader
+	BitMode BitMode
+	Reader  *bufio.Reader
 }
 
 func NewTutor() (*Tutor, error) {
@@ -31,8 +39,8 @@ func NewTutor() (*Tutor, error) {
 		return nil, err
 	}
 	return &Tutor{
-		ShowMode: config.ShowMode,
-		Reader:   bufio.NewReader(os.Stdin),
+		BitMode: config.BitMode,
+		Reader:  bufio.NewReader(os.Stdin),
 	}, nil
 }
 
@@ -81,21 +89,28 @@ func readFromConfig() (*BitConfig, error) {
 }
 
 func (t *Tutor) explain(explanations ...string) *Tutor {
-	if t.ShowMode {
+	if t.BitMode == ExplainMode {
 		output := line.New(os.Stdout, "", "", line.WhiteColor)
 		output.Println(strings.Join(explanations, "\n\n"))
 	}
 	return t
 }
 
+func (t *Tutor) hint(hint string) *Tutor {
+	if t.BitMode == HintMode {
+		fmt.Println(hint)
+	}
+	return t
+}
+
 func (t *Tutor) finalOutput(output string) {
-	if !t.ShowMode {
+	if t.BitMode == SilentMode {
 		fmt.Println(output)
 	}
 }
 
 func (t *Tutor) hide() *Tutor {
-	return &Tutor{ShowMode: false}
+	return &Tutor{BitMode: SilentMode}
 }
 
 func (t *Tutor) git(args ...string) string {
@@ -103,13 +118,30 @@ func (t *Tutor) git(args ...string) string {
 	return out
 }
 
+func (t *Tutor) expectInput(input string) bool {
+	fmt.Print("> ")
+	line, err := t.Reader.ReadString('\n')
+	line = strings.TrimSpace(line)
+	if err != nil {
+		Fail("Error reading input")
+	}
+	return line == input
+}
+
 func (t *Tutor) gitF(args ...string) (string, error) {
-	if t.ShowMode {
+	if t.BitMode == ExplainMode {
 		boldgreen := color.New(color.Bold, color.FgBlue)
 		output := line.New(os.Stdout, "", "", line.WhiteColor)
 		output.Println()
 		output.Print("> ").Format(boldgreen).Print("git ").Cyan().Print(strings.Join(args, " "))
 		t.Reader.ReadString('\n')
+	}
+	var err error
+	if t.BitMode == HintMode {
+		gitCmd := strings.TrimSpace("git " + strings.Join(args, " "))
+		for !t.expectInput(gitCmd) {
+			fmt.Println("Type \"" + gitCmd + "\" (or ^C to exit)\n")
+		}
 	}
 
 	outBuf := new(bytes.Buffer)
@@ -118,7 +150,7 @@ func (t *Tutor) gitF(args ...string) (string, error) {
 	cmd.Stdout = outBuf
 	cmd.Stderr = errBuf
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		if errBuf.String() != "" {
 			Fail(errBuf.String())
@@ -126,13 +158,12 @@ func (t *Tutor) gitF(args ...string) (string, error) {
 		Fail(outBuf.String())
 	}
 
-	if t.ShowMode {
-
+	if t.BitMode == ExplainMode || t.BitMode == HintMode {
 		fmt.Println()
 		fmt.Println("========== Output ==========")
 		output := outBuf.String()
 		if strings.TrimSpace(output) == "" {
-			output = "Nothing!"
+			output = "Nothing!\n"
 		}
 		fmt.Print(output)
 		fmt.Println("============================")

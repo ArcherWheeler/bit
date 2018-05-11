@@ -12,7 +12,9 @@ func (t *Tutor) SmartStash() {
 			Fail("Do not commit to master")
 		}
 
-		t.explain(
+		t.hint(
+			"commit your changes as WIP-BIT-SMART-STASH",
+		).explain(
 			p(`You currently have changes since your last commit. We need to save them before switching branches.`),
 			p(`Annoyingly Git treats uncommited changes seperatly from everything else. If you checkout a branch
 			 with uncommited changes the changes move with you. This can cause unexpected conflicts between you changes.
