@@ -59,10 +59,10 @@ func main() {
 			Action:  t.Sync,
 		},
 		{
-			Name:    "toggle",
-			Aliases: []string{"tg"},
-			Usage:   "Toggle the show mode on/off",
-			Action:  t.ToggleShowMode,
+			Name:    "mode",
+			Aliases: []string{"md"},
+			Usage:   "Set the show mode to silent, explain or hint",
+			Action:  t.SetShowMode,
 		},
 	}
 

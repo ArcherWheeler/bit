@@ -178,9 +178,21 @@ func (t *Tutor) Status(c *cli.Context) {
 	t.finalOutput(stdout)
 }
 
-func (t *Tutor) ToggleShowMode(c *cli.Context) {
-	err := saveConfig(BitConfig{BitMode: (t.BitMode + 1) % 3})
+func (t *Tutor) SetShowMode(c *cli.Context) {
+	mode := c.Args().First()
+	var bitMode BitMode
+	switch mode {
+	case "silent":
+		bitMode = 0
+	case "explain":
+		bitMode = 1
+	case "hint":
+		bitMode = 2
+	default:
+		Fail("Unkown mode")
+	}
+	err := saveConfig(BitConfig{BitMode: bitMode})
 	if err != nil {
-		Fail(err)
+		Fail(err.Error())
 	}
 }
